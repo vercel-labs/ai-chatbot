@@ -5,6 +5,7 @@
     "build": "next build",
     "start": "next start",
     "type-check": "tsc --noEmit",
+    "supabase:generate:types": "supabase gen types --lang=typescript --local > utils/supabase/types.ts",
     "format:write": "prettier --write \"{app,lib,components}/**/*.{ts,tsx,mdx}\" --cache",
     "format:check": "prettier --check \"{app,lib,components}**/*.{ts,tsx,mdx}\" --cache"
   },
@@ -20,8 +21,7 @@
     "@radix-ui/react-slot": "^1.1.0",
     "@radix-ui/react-switch": "^1.1.0",
     "@radix-ui/react-tooltip": "^1.1.2",
-    "@vercel/analytics": "^1.3.1",
-    "@vercel/kv": "^2.0.0",
+    "@supabase/ssr": "^0.5.1",
     "ai": "^3.3.17",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
@@ -29,12 +29,10 @@
     "geist": "^1.3.1",
     "nanoid": "^5.0.7",
     "next": "14.2.6",
-    "next-auth": "5.0.0-beta.4",
     "next-themes": "^0.3.0",
     "openai": "^4.56.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-intersection-observer": "^9.10.3",
     "react-markdown": "^8.0.7",
     "react-syntax-highlighter": "^15.5.0",
     "react-textarea-autosize": "^8.5.3",
@@ -44,6 +42,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@supabase/supabase-js": "^2.45.4",
     "@tailwindcss/typography": "^0.5.14",
     "@types/node": "^22.5.0",
     "@types/react": "^18.3.4",
@@ -52,9 +51,11 @@
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.41",
     "prettier": "^3.3.3",
+    "supabase": "^1.192.5",
     "tailwind-merge": "^2.5.2",
     "tailwindcss": "^3.4.10",
     "tailwindcss-animate": "^1.0.7",
+    "type-fest": "^4.26.1",
     "typescript": "^5.5.4"
   },
   "packageManager": "pnpm@8.6.3"
