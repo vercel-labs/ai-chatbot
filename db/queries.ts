@@ -8,9 +8,12 @@ import postgres from 'postgres';
 import {
   user,
   chat,
-  User,
+  agent,
+  suggestion,
+  type Agent,
+  type User,
+  type Suggestion,
   document,
-  Suggestion,
   Message,
   message,
   vote,
@@ -46,18 +49,21 @@ export async function createUser(email: string, password: string) {
 export async function saveChat({
   id,
   userId,
+  agentId,
   title,
 }: {
   id: string;
   userId: string;
+  agentId?: string;
   title: string;
 }) {
   try {
     return await db.insert(chat).values({
       id,
       createdAt: new Date(),
-      userId,
       title,
+      userId,
+      agentId,
     });
   } catch (error) {
     console.error('Failed to save chat in database');
@@ -73,6 +79,24 @@ export async function deleteChatById({ id }: { id: string }) {
     return await db.delete(chat).where(eq(chat.id, id));
   } catch (error) {
     console.error('Failed to delete chat by id from database');
+    throw error;
+  }
+}
+
+export async function deleteAgentById({ id }: { id: string }) {
+  try {
+    return await db.delete(agent).where(eq(agent.id, id));
+  } catch (error) {
+    console.error('Failed to delete agent by id from database');
+    throw error;
+  }
+}
+
+export async function deleteChatsByAgentId({ id }: { id: string }) {
+  try {
+    return await db.delete(chat).where(eq(chat.agentId, id));
+  } catch (error) {
+    console.error('Failed to delete chats by agent id from database');
     throw error;
   }
 }
@@ -244,7 +268,7 @@ export async function saveSuggestions({
   suggestions: Array<Suggestion>;
 }) {
   try {
-    return await db.insert(Suggestion).values(suggestions);
+    return await db.insert(suggestion).values(suggestions);
   } catch (error) {
     console.error('Failed to save suggestions in database');
     throw error;
@@ -259,12 +283,109 @@ export async function getSuggestionsByDocumentId({
   try {
     return await db
       .select()
-      .from(Suggestion)
-      .where(and(eq(Suggestion.documentId, documentId)));
+      .from(suggestion)
+      .where(and(eq(suggestion.documentId, documentId)));
   } catch (error) {
     console.error(
       'Failed to get suggestions by document version from database'
     );
+    throw error;
+  }
+}
+
+// Create a new Agent
+export async function createAgent({
+  name,
+  description,
+  customInstructions,
+  aiModel,
+  userId,
+}: {
+  name: string;
+  description?: string;
+  customInstructions?: string;
+  aiModel: string;
+  userId: string;
+}): Promise<Agent> {
+  try {
+    const [newAgent] = await db
+      .insert(agent)
+      .values({
+        name,
+        description,
+        customInstructions,
+        aiModel,
+        userId,
+      })
+      .returning();
+    return newAgent;
+  } catch (error) {
+    console.error('Failed to create Agent in database', error);
+    throw error;
+  }
+}
+
+// Get an Agent by ID
+export async function getAgentById({
+  id,
+}: {
+  id: string;
+}): Promise<Agent | undefined> {
+  try {
+    const [selectedAgent] = await db
+      .select()
+      .from(agent)
+      .where(eq(agent.id, id));
+    return selectedAgent;
+  } catch (error) {
+    console.error('Failed to get Agent by id from database');
+    throw error;
+  }
+}
+
+// Get all Agents for a user
+export async function getAgentsByUserId({
+  userId,
+}: {
+  userId: string;
+}): Promise<Agent[]> {
+  try {
+    return await db.select().from(agent).where(eq(agent.userId, userId));
+  } catch (error) {
+    console.error('Failed to get Agents by user id from database');
+    throw error;
+  }
+}
+
+// Update an Agent
+export async function updateAgent({
+  id,
+  name,
+  description,
+  customInstructions,
+  aiModel,
+}: {
+  id: string;
+  name?: string;
+  description?: string;
+  customInstructions?: string;
+  aiModel?: string;
+}): Promise<Agent | undefined> {
+  try {
+    const [updatedAgent] = await db
+      .update(agent)
+      .set({
+        name,
+        description,
+        customInstructions,
+        aiModel,
+        updatedAt: new Date(),
+      })
+      .where(eq(agent.id, id))
+      .returning();
+    return updatedAgent;
+  } catch (error) {
+    console.error('Failed to update Agent in database');
     throw error;
   }
 }

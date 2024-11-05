@@ -10,7 +10,7 @@ import { useWindowSize } from 'usehooks-ts';
 import { ChatHeader } from '@/components/custom/chat-header';
 import { PreviewMessage } from '@/components/custom/message';
 import { useScrollToBottom } from '@/components/custom/use-scroll-to-bottom';
-import { Vote } from '@/db/schema';
+import { type Agent, type Vote } from '@/db/schema';
 import { fetcher } from '@/lib/utils';
 
 import { Canvas, UICanvas } from './canvas';
@@ -22,10 +22,12 @@ export function Chat({
   id,
   initialMessages,
   selectedModelId,
+  agent,
 }: {
   id: string;
   initialMessages: Array<Message>;
   selectedModelId: string;
+  agent?: Agent;
 }) {
   const { mutate } = useSWRConfig();
 
@@ -40,7 +42,7 @@ export function Chat({
     stop,
     data: streamingData,
   } = useChat({
-    body: { id, modelId: selectedModelId },
+    body: { id, modelId: selectedModelId, agentId: agent?.id },
     initialMessages,
     onFinish: () => {
       mutate('/api/history');
@@ -77,7 +79,7 @@ export function Chat({
   return (
     <>
       <div className="flex flex-col min-w-0 h-dvh bg-background">
-        <ChatHeader selectedModelId={selectedModelId} />
+        <ChatHeader selectedModelId={selectedModelId} agent={agent} />
         <div
           ref={messagesContainerRef}
           className="flex flex-col min-w-0 gap-6 flex-1 overflow-y-scroll pt-4"

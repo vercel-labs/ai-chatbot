@@ -1,14 +1,14 @@
 import { InferSelectModel } from 'drizzle-orm';
 import {
-  pgTable,
-  varchar,
-  timestamp,
-  json,
-  uuid,
-  text,
-  primaryKey,
-  foreignKey,
   boolean,
+  foreignKey,
+  json,
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+  uuid,
+  varchar,
 } from 'drizzle-orm/pg-core';
 
 export const user = pgTable('User', {
@@ -26,6 +26,7 @@ export const chat = pgTable('Chat', {
   userId: uuid('userId')
     .notNull()
     .references(() => user.id),
+  agentId: uuid('agentId').references(() => agent.id),
 });
 
 export type Chat = InferSelectModel<typeof chat>;
@@ -82,7 +83,7 @@ export const document = pgTable(
 
 export type Document = InferSelectModel<typeof document>;
 
-export const Suggestion = pgTable(
+export const suggestion = pgTable(
   'Suggestion',
   {
     id: uuid('id').notNull().defaultRandom(),
@@ -106,4 +107,20 @@ export const Suggestion = pgTable(
   })
 );
 
-export type Suggestion = InferSelectModel<typeof Suggestion>;
+export type Suggestion = InferSelectModel<typeof suggestion>;
+
+export const agent = pgTable('Agent', {
+  id: uuid('id').primaryKey().notNull().defaultRandom(),
+  name: varchar('name', { length: 255 }).notNull(),
+  description: text('description'),
+  customInstructions: text('customInstructions'),
+  aiModel: varchar('aiModel', { length: 50 }).notNull(),
+  userId: uuid('userId')
+    .notNull()
+    .references(() => user.id),
+  createdAt: timestamp('createdAt').notNull().defaultNow(),
+  updatedAt: timestamp('updatedAt').notNull().defaultNow(),
+  deletedAt: timestamp('deletedAt').notNull().defaultNow(),
+});
+
+export type Agent = InferSelectModel<typeof agent>;

@@ -25,8 +25,17 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import { BetterTooltip } from '@/components/ui/tooltip';
+import { type Agent } from '@/db/schema';
 
-export function AppSidebar({ user }: { user: User | undefined }) {
+import { SidebarAgents } from './sidebar-agents';
+
+export function AppSidebar({
+  user,
+  agents,
+}: {
+  user: User | undefined;
+  agents: Agent[];
+}) {
   const { setOpenMobile } = useSidebar();
 
   return (
@@ -52,6 +61,9 @@ export function AppSidebar({ user }: { user: User | undefined }) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
+        <SidebarGroup>
+          <SidebarAgents agents={agents} />
+        </SidebarGroup>
         <SidebarGroup>
           <SidebarHistory user={user} />
         </SidebarGroup>
