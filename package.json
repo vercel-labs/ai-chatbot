@@ -18,7 +18,10 @@
     "db:up": "drizzle-kit up"
   },
   "dependencies": {
+    "@ai-sdk/groq": "^1.0.4",
     "@ai-sdk/openai": "1.0.0-canary.3",
+    "@huggingface/transformers": "^3.1.0",
+    "@pinecone-database/pinecone": "^4.0.0",
     "@radix-ui/react-alert-dialog": "^1.1.2",
     "@radix-ui/react-dialog": "^1.1.2",
     "@radix-ui/react-dropdown-menu": "^2.1.1",
@@ -63,6 +66,7 @@
     "react-markdown": "^9.0.1",
     "remark-gfm": "^4.0.0",
     "server-only": "^0.0.1",
+    "sharp": "^0.33.5",
     "sonner": "^1.5.0",
     "swr": "^2.2.5",
     "tailwind-merge": "^2.5.2",
