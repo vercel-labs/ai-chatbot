@@ -8,7 +8,7 @@ import {
 
 import { auth } from '@/app/(auth)/auth';
 import { customModel } from '@/lib/ai';
-import { models } from '@/lib/ai/models';
+import { models, DEFAULT_MODEL_NAME } from '@/lib/ai/models';
 import { systemPrompt } from '@/lib/ai/prompts';
 import {
   deleteChatById,
@@ -18,15 +18,15 @@ import {
 } from '@/lib/db/queries';
 import {
   generateUUID,
+  getAllButLastUserMessage,
   getMostRecentUserMessage,
   sanitizeResponseMessages,
 } from '@/lib/utils';
 
 import { generateTitleFromUserMessage } from '../../actions';
-import { createDocument } from '@/lib/ai/tools/create-document';
-import { updateDocument } from '@/lib/ai/tools/update-document';
-import { requestSuggestions } from '@/lib/ai/tools/request-suggestions';
-import { getWeather } from '@/lib/ai/tools/get-weather';
+import { endConversation } from '@/lib/ai/tools/end-conversation';
+import { lookupFlightManual } from '@/lib/ai/tools/lookup-flight-manual';
+
 
 export const maxDuration = 60;
 
@@ -36,21 +36,12 @@ type AllowedTools =
   | 'requestSuggestions'
   | 'getWeather';
 
-const blocksTools: AllowedTools[] = [
-  'createDocument',
-  'updateDocument',
-  'requestSuggestions',
-];
-
-const weatherTools: AllowedTools[] = ['getWeather'];
-const allTools: AllowedTools[] = [...blocksTools, ...weatherTools];
 
 export async function POST(request: Request) {
   const {
     id,
     messages,
-    modelId,
-  }: { id: string; messages: Array<Message>; modelId: string } =
+  }: { id: string; messages: Array<Message> } =
     await request.json();
 
   const session = await auth();
@@ -59,7 +50,7 @@ export async function POST(request: Request) {
     return new Response('Unauthorized', { status: 401 });
   }
 
-  const model = models.find((model) => model.id === modelId);
+  const model = models.find((model) => model.id === DEFAULT_MODEL_NAME);
 
   if (!model) {
     return new Response('Model not found', { status: 404 });
@@ -67,7 +58,7 @@ export async function POST(request: Request) {
 
   const coreMessages = convertToCoreMessages(messages);
   const userMessage = getMostRecentUserMessage(coreMessages);
-
+  const allButLastUserMessage = getAllButLastUserMessage(coreMessages);
   if (!userMessage) {
     return new Response('No user message found', { status: 400 });
   }
@@ -77,6 +68,16 @@ export async function POST(request: Request) {
   if (!chat) {
     const title = await generateTitleFromUserMessage({ message: userMessage });
     await saveChat({ id, userId: session.user.id, title });
+    await saveMessages({
+      messages: [
+        ...allButLastUserMessage.map(message => ({
+          ...message,
+          id: generateUUID(),
+          createdAt: new Date(),
+          chatId: id
+        })),
+      ],
+    });
   }
 
   const userMessageId = generateUUID();
@@ -99,19 +100,14 @@ export async function POST(request: Request) {
         system: systemPrompt,
         messages: coreMessages,
         maxSteps: 5,
-        experimental_activeTools: allTools,
+        // experimental_activeTools: allTools,
         experimental_transform: smoothStream({ chunking: 'word' }),
         tools: {
-          getWeather,
-          createDocument: createDocument({ session, dataStream, model }),
-          updateDocument: updateDocument({ session, dataStream, model }),
-          requestSuggestions: requestSuggestions({
-            session,
-            dataStream,
-            model,
-          }),
+          endConversation: endConversation({ dataStream }),
+          lookupFlightManual: lookupFlightManual({ dataStream }),
         },
         onFinish: async ({ response }) => {
+          console.log('onFinish called', response);
           if (session.user?.id) {
             try {
               const responseMessagesWithoutIncompleteToolCalls =

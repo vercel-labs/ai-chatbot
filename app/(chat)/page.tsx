@@ -1,27 +1,18 @@
 import { cookies } from 'next/headers';
 
 import { Chat } from '@/components/chat';
-import { DEFAULT_MODEL_NAME, models } from '@/lib/ai/models';
 import { generateUUID } from '@/lib/utils';
 import { DataStreamHandler } from '@/components/data-stream-handler';
 
 export default async function Page() {
   const id = generateUUID();
 
-  const cookieStore = await cookies();
-  const modelIdFromCookie = cookieStore.get('model-id')?.value;
-
-  const selectedModelId =
-    models.find((model) => model.id === modelIdFromCookie)?.id ||
-    DEFAULT_MODEL_NAME;
-
   return (
     <>
       <Chat
         key={id}
         id={id}
-        initialMessages={[]}
-        selectedModelId={selectedModelId}
+        initialMessages={[{ id: generateUUID(), content: "Hi Mr Pilot, Please briefly describe your squawk and the aircraft type. (at any time during conversation if you think you provide all the info or it should be clear enough, you can simply type 'Exit' to end the conversation)", role: "assistant" }]}
         selectedVisibilityType="private"
         isReadonly={false}
       />
