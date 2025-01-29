@@ -6,6 +6,7 @@ import {
 } from 'ai';
 
 import { auth } from '@/app/(auth)/auth';
+import type { VisibilityType } from '@/components/visibility-selector';
 import { customModel } from '@/lib/ai';
 import { models } from '@/lib/ai/models';
 import { systemPrompt } from '@/lib/ai/prompts';
@@ -49,8 +50,13 @@ export async function POST(request: Request) {
     id,
     messages,
     modelId,
-  }: { id: string; messages: Array<Message>; modelId: string } =
-    await request.json();
+    visibility,
+  }: {
+    id: string;
+    messages: Array<Message>;
+    modelId: string;
+    visibility: VisibilityType;
+  } = await request.json();
 
   const session = await auth();
 
@@ -74,7 +80,7 @@ export async function POST(request: Request) {
 
   if (!chat) {
     const title = await generateTitleFromUserMessage({ message: userMessage });
-    await saveChat({ id, userId: session.user.id, title });
+    await saveChat({ id, userId: session.user.id, title, visibility });
   }
 
   await saveMessages({
