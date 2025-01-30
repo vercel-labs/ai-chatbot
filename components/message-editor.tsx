@@ -54,6 +54,7 @@ export function MessageEditor({
         className="bg-transparent outline-none overflow-hidden resize-none !text-base rounded-xl w-full"
         value={draftContent}
         onChange={handleInput}
+        data-testid="message-editor"
       />
 
       <div className="flex flex-row gap-2 justify-end">
@@ -95,6 +96,7 @@ export function MessageEditor({
             setMode('view');
             reload();
           }}
+          data-testid="message-editor-send-button"
         >
           {isSubmitting ? 'Sending...' : 'Send'}
         </Button>
