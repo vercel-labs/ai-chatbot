@@ -1,6 +1,6 @@
 import { generateUUID } from '@/lib/utils';
 import {
-  DataStreamWriter,
+  type DataStreamWriter,
   experimental_generateImage,
   smoothStream,
   streamObject,
@@ -11,8 +11,8 @@ import { z } from 'zod';
 import { customModel, imageGenerationModel } from '..';
 import { codePrompt } from '../prompts';
 import { saveDocument } from '@/lib/db/queries';
-import { Session } from 'next-auth';
-import { Model } from '../models';
+import type { Session } from 'next-auth';
+import type { Model } from '../models';
 
 interface CreateDocumentProps {
   model: Model;
@@ -57,32 +57,23 @@ export const createDocument = ({
       });
 
       if (kind === 'text') {
-        const { fullStream } = streamText({
-          model: customModel(model.apiIdentifier),
+        const result = streamText({
+          model: customModel(model.apiIdentifier, model.provider),
           system:
             'Write about the given topic. Markdown is supported. Use headings wherever appropriate.',
           experimental_transform: smoothStream({ chunking: 'word' }),
           prompt: title,
         });
 
-        for await (const delta of fullStream) {
-          const { type } = delta;
+        result.mergeIntoDataStream(dataStream, {
+          sendReasoning: false,
+        });
 
-          if (type === 'text-delta') {
-            const { textDelta } = delta;
-
-            draftText += textDelta;
-            dataStream.writeData({
-              type: 'text-delta',
-              content: textDelta,
-            });
-          }
-        }
-
+        // TODO is this still needed?
         dataStream.writeData({ type: 'finish', content: '' });
       } else if (kind === 'code') {
         const { fullStream } = streamObject({
-          model: customModel(model.apiIdentifier),
+          model: customModel(model.apiIdentifier, model.provider),
           system: codePrompt,
           prompt: title,
           schema: z.object({
@@ -90,6 +81,7 @@ export const createDocument = ({
           }),
         });
 
+        // TODO how do we want to handle this? Does it work as expected?
         for await (const delta of fullStream) {
           const { type } = delta;
 

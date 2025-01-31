@@ -1,6 +1,5 @@
 import type {
   CoreAssistantMessage,
-  CoreMessage,
   CoreToolMessage,
   Message,
   ToolInvocation,
@@ -120,6 +119,7 @@ export function convertToUIMessages(
       role: message.role as Message['role'],
       content: textContent,
       toolInvocations,
+      reasoning: message.reasoning || undefined,
     });
 
     return chatMessages;

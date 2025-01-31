@@ -19,6 +19,12 @@ import { Button } from './ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { MessageEditor } from './message-editor';
 import { DocumentPreview } from './document-preview';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from './ui/accordion';
 
 const PurePreviewMessage = ({
   chatId,
@@ -42,6 +48,21 @@ const PurePreviewMessage = ({
   isReadonly: boolean;
 }) => {
   const [mode, setMode] = useState<'view' | 'edit'>('view');
+  const reasoning = useMemo(() => {
+    console.log('reasoning', message);
+    if (!message.reasoning) return [];
+    return message.reasoning
+      .split('###')
+      .map((point) => {
+        if (point.trim() === '') return null;
+        const [title, ...details] = point.split('\n');
+        return {
+          title: title,
+          details: details.join('\n').trim(),
+        };
+      })
+      .filter(Boolean) as { title: string; details: string }[];
+  }, [message.reasoning]);
 
   return (
     <AnimatePresence>
@@ -69,6 +90,25 @@ const PurePreviewMessage = ({
           )}
 
           <div className="flex flex-col gap-2 w-full">
+            {message.reasoning && (
+              <div className="reasoning flex flex-col gap-8 bg-sidebar rounded-xl p-4 mb-8">
+                <Accordion type="multiple" className="w-full overflow-hidden">
+                  {reasoning.map((point) => (
+                    <AccordionItem key={point.title} value={point.title}>
+                      <AccordionTrigger className="text-left p-2 w-full">
+                        <span className="text-md truncate capitalize mr-2">
+                          {point.title}
+                        </span>
+                      </AccordionTrigger>
+                      <AccordionContent className="text-left p-2">
+                        {point.details}
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+              </div>
+            )}
+
             {message.experimental_attachments && (
               <div className="flex flex-row justify-end gap-2">
                 {message.experimental_attachments.map((attachment) => (
@@ -210,6 +250,8 @@ export const PreviewMessage = memo(
   (prevProps, nextProps) => {
     if (prevProps.isLoading !== nextProps.isLoading) return false;
     if (prevProps.message.content !== nextProps.message.content) return false;
+    if (prevProps.message.reasoning !== nextProps.message.reasoning)
+      return false;
     if (
       !equal(
         prevProps.message.toolInvocations,

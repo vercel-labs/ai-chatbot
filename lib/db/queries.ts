@@ -16,7 +16,7 @@ import {
   message,
   vote,
 } from './schema';
-import { BlockKind } from '@/components/block';
+import type { BlockKind } from '@/components/block';
 
 // Optionally, if not using email/pass login, you can
 // use the Drizzle adapter for Auth.js / NextAuth
@@ -106,6 +106,7 @@ export async function getChatById({ id }: { id: string }) {
 
 export async function saveMessages({ messages }: { messages: Array<Message> }) {
   try {
+    console.log(messages);
     return await db.insert(message).values(messages);
   } catch (error) {
     console.error('Failed to save messages in database', error);
@@ -115,11 +116,14 @@ export async function saveMessages({ messages }: { messages: Array<Message> }) {
 
 export async function getMessagesByChatId({ id }: { id: string }) {
   try {
-    return await db
+    const messages = await db
       .select()
       .from(message)
       .where(eq(message.chatId, id))
       .orderBy(asc(message.createdAt));
+    console.log(messages);
+
+    return messages;
   } catch (error) {
     console.error('Failed to get messages by chat id from database', error);
     throw error;
